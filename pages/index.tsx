@@ -73,6 +73,7 @@ const Home: NextPage = () => {
                   href="https://github.com/GodderE2D/athena-but-better"
                   className="link"
                   target="_blank"
+                  rel="noreferrer"
                 >
                   (GitHub)
                 </a>
@@ -82,17 +83,19 @@ const Home: NextPage = () => {
                   Still not convinced?
                 </h2>
                 <p className="py-2 sm:py-3">
-                  Here's a definitely real chart on how Athena and Athena but
-                  better performs. It is gauged off whether I think how awesome
-                  it is.
+                  Here&apos;s a definitely real chart on how Athena and Athena
+                  but better performs. It is gauged off whether I think how
+                  awesome it is.
                 </p>
-                <small className="block">Athena's performance</small>
+                <small className="block">Athena&apos;s performance</small>
                 <progress
                   className="progress max-w-sm"
                   value="5"
                   max="100"
                 ></progress>
-                <small className="block">Athena but better's performance</small>
+                <small className="block">
+                  Athena but better&apos;s performance
+                </small>
                 <progress
                   className="progress max-w-sm"
                   value="100"
