@@ -71,9 +71,9 @@ const Home: NextPage = () => {
                 hardcoded!
               </p>
               <p className="pt-2 md:pt-3:lg:pt-6">
-                Athena but better is a chatbot using OpenAI's GPT-3 engine. It's
-                not the brightest, but it's definitely smarter than Athena.
-                Never refer to Athena but better as Athena!{" "}
+                Athena but better is a chatbot using OpenAI&apos;s GPT-3 engine.
+                It&apos;s not the brightest, but it&apos;s definitely smarter
+                than Athena. Never refer to Athena but better as Athena!{" "}
                 <a
                   href="https://github.com/GodderE2D/athena-but-better"
                   className="link"
