@@ -54,7 +54,7 @@ const Home: NextPage = () => {
         <meta
           property="og:description"
           content={
-            "Athena is a chatbot with hundreds of hardcoded responses. Athena but better is better than that - absolutely nothing is hardcoded!\n\nAthena but better is a chatbot using OpenAI's DALL-E engine. It's not the brightest, but it's definitely smarter than Athena. Never refer to Athena but better as Athena!"
+            "Athena is a chatbot with hundreds of hardcoded responses. Athena but better is better than that - absolutely nothing is hardcoded!\n\nAthena but better is a chatbot using OpenAI's GPT-3 engine. It's not the brightest, but it's definitely smarter than Athena. Never refer to Athena but better as Athena!"
           }
         />
       </Head>

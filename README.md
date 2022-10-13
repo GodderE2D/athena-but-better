@@ -2,7 +2,7 @@
 
 Athena is a chatbot with hundreds of hardcoded responses. Athena but better is better than that - absolutely nothing is hardcoded!
 
-Athena but better is a chatbot using OpenAI's DALL-E engine. It's not the brightest, but it's definitely smarter than Athena. Never refer to Athena but better as Athena!
+Athena but better is a chatbot using OpenAI's GPT-3 engine. It's not the brightest, but it's definitely smarter than Athena. Never refer to Athena but better as Athena!
 
 ## [Talk to Athena but better](https://abb.godder.xyz/)
 
