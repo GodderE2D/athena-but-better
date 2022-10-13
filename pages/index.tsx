@@ -129,7 +129,7 @@ const Home: NextPage = () => {
                       : msg.author === "user"
                       ? "badge-secondary"
                       : ""
-                  } badge-lg text-sm font-semibold mr-4`}
+                  } badge-lg text-sm font-semibold mr-4 min-w-max`}
                 >
                   {msg.author === "bot"
                     ? "Athena but better"
