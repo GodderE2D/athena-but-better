@@ -195,11 +195,17 @@ export default async function handler(
     const dailyCurrentMinRequests: number | null = await redis.get(
       dailyKeyName
     );
-    if (dailyCurrentMinRequests && dailyCurrentMinRequests > 100) {
+    if (
+      dailyCurrentMinRequests &&
+      dailyCurrentMinRequests >
+        parseInt(process.env.GLOBAL_DAILY_RATE_LIMIT ?? "100")
+    ) {
       result = {
         id: cuid(),
         error: true,
-        errorResponse: `Global daily rate limit of 50 requests/day reached.`,
+        errorResponse: `Global daily rate limit of ${
+          process.env.GLOBAL_DAILY_RATE_LIMIT ?? "100"
+        } requests/day reached.`,
       };
       return res.status(429).json(result);
     }
