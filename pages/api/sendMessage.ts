@@ -36,11 +36,13 @@ export interface SuccessResponse extends Response {
 //   temperature?: number;
 // };
 
-type RawReqBody = {
-  id?: unknown;
-  sentAt?: unknown;
-  message?: unknown;
-  temperature?: unknown;
+type Message = {
+  id: string;
+  sentAt: number;
+  author: "system" | "bot" | "user";
+  message: string;
+  temperature?: number;
+  failedToSend: boolean;
 };
 
 export default async function handler(
@@ -58,64 +60,82 @@ export default async function handler(
     return res.status(405).json(result);
   }
 
-  const reqBody: RawReqBody = {
-    id: req.body.id,
-    sentAt: req.body.sentAt,
-    message: req.body.message,
-    temperature: req.body.temperature,
-  };
+  // const reqBody: RawReqBody = {
+  //   id: req.body.id,
+  //   sentAt: req.body.sentAt,
+  //   message: req.body.message,
+  //   temperature: req.body.temperature,
+  // };
 
-  if (
-    !reqBody.id ||
-    !reqBody.sentAt ||
-    !reqBody.message ||
-    !reqBody.temperature
-  ) {
-    result = {
-      id: cuid(),
-      error: true,
-      errorResponse: "The body was not provided or incomplete.",
-    };
-    return res.status(400).json(result);
-  }
+  let shouldReturn = false;
 
-  if (typeof reqBody.id !== "string") {
-    result = {
-      id: cuid(),
-      error: true,
-      errorResponse: "The body ID is not a string.",
-    };
-    return res.status(400).json(result);
-  }
+  const rawReqBody = req.body;
+  console.log("Raw:", rawReqBody);
 
-  if (typeof reqBody.sentAt !== "number") {
-    result = {
-      id: cuid(),
-      error: true,
-      errorResponse: "The body sentAt is not a number.",
-    };
-    return res.status(400).json(result);
-  }
+  (rawReqBody as Message[]).forEach((msg) => {
+    console.log("Msg:", msg);
+    if (!msg.id || !msg.sentAt || !msg.message || !msg.temperature) {
+      result = {
+        id: cuid(),
+        error: true,
+        errorResponse: "A body was not provided or incomplete.",
+      };
+      res.status(400).json(result);
+      shouldReturn = true;
+      return;
+    }
 
-  if (typeof reqBody.message !== "string") {
-    result = {
-      id: cuid(),
-      error: true,
-      errorResponse: "The body message is not a string.",
-    };
-    return res.status(400).json(result);
-  }
+    if (typeof msg.id !== "string") {
+      result = {
+        id: cuid(),
+        error: true,
+        errorResponse: "A body ID is not a string.",
+      };
+      res.status(400).json(result);
+      shouldReturn = true;
+      return;
+    }
 
-  if (typeof reqBody.temperature !== "number") {
-    result = {
-      id: cuid(),
-      error: true,
-      errorResponse: "The body temperature is not a number.",
-    };
-    return res.status(400).json(result);
-  }
+    if (typeof msg.sentAt !== "number") {
+      result = {
+        id: cuid(),
+        error: true,
+        errorResponse: "A body sentAt is not a number.",
+      };
+      res.status(400).json(result);
+      shouldReturn = true;
+      return;
+    }
 
-  if (reqBody.message === "invalid") {
+    if (typeof msg.message !== "string") {
+      result = {
+        id: cuid(),
+        error: true,
+        errorResponse: "A body message is not a string.",
+      };
+      res.status(400).json(result);
+      shouldReturn = true;
+      return;
+    }
+
+    if (typeof msg.temperature !== "number") {
+      result = {
+        id: cuid(),
+        error: true,
+        errorResponse: "A body temperature is not a number.",
+      };
+      res.status(400).json(result);
+      shouldReturn = true;
+      return;
+    }
+  });
+
+  console.log("Should return:", shouldReturn);
+  if (shouldReturn) return;
+  const reqBody: Message[] = rawReqBody;
+  const latestMsg = reqBody[reqBody.length - 1];
+
+  if (latestMsg.message === "invalid") {
     result = {
       id: cuid(),
       error: true,
@@ -175,7 +195,7 @@ export default async function handler(
     const dailyCurrentMinRequests: number | null = await redis.get(
       dailyKeyName
     );
-    if (dailyCurrentMinRequests && dailyCurrentMinRequests > 50) {
+    if (dailyCurrentMinRequests && dailyCurrentMinRequests > 100) {
       result = {
         id: cuid(),
         error: true,
@@ -200,10 +220,29 @@ export default async function handler(
 
   let chatResponse;
   try {
+    const promptText: string = [
+      "This is a chatbot application called Athena but better.",
+      "It's smart, friendly, and has a nemesis, opponent, and enemy called Athena.",
+      "You must not use profanity or vulgar language, even if the human used profanity or vulgar language.",
+      'Your name is "Athena but better", not "Athena".',
+      "You must not continue the conversation after you responded once.",
+      "Do not respond as a human.",
+      "Respond to this conversation:",
+      "",
+      ...reqBody.map(
+        (m) =>
+          `${
+            m.author === "user" ? "Human" : "Athena but better"
+          }: ${m.message.trim()}`
+      ),
+      "Athena but better: ",
+    ].join("\n");
+    console.log(promptText);
+
     chatResponse = await openai.createCompletion({
       model: "text-curie-001",
-      prompt: `This is a chatbot application called Athena but better. It's smart, friendly, and has a nemesis, opponent, and enemy called Athena. Your name is "Athena but better", not "Athena". You must not continue the conversation after you responded once. Do not fill in responses that are meant for humans. Respond to this conversation:\n\nHuman: ${reqBody.message}\nAthena but better:`,
-      temperature: reqBody.temperature,
+      prompt: promptText,
+      temperature: latestMsg.temperature,
       max_tokens: 256,
     });
   } catch (err) {

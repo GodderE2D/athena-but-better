@@ -170,6 +170,7 @@ const Home: NextPage = () => {
                     sentAt: Date.now(),
                     author: "user",
                     message: msg,
+                    temperature: 0.7,
                     failedToSend: false,
                   };
 
@@ -179,17 +180,19 @@ const Home: NextPage = () => {
                     return [...s, userMsg];
                   });
 
+                  const filteredMsgs = JSON.stringify(
+                    [...messages, userMsg].filter(
+                      (m) => m.author !== "system" && m.failedToSend === false
+                    )
+                  );
+                  console.log(filteredMsgs);
+
                   const fetched = await fetch("/api/sendMessage", {
                     method: "POST",
                     headers: {
                       "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({
-                      id: userMsg.id,
-                      sentAt: userMsg.sentAt,
-                      message: userMsg.message,
-                      temperature: 0.7,
-                    }),
+                    body: filteredMsgs,
                   });
                   const response: SuccessResponse | FailResponse =
                     await fetched.json();
