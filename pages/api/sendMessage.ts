@@ -224,6 +224,40 @@ export default async function handler(
     return res.status(500).json(result);
   }
 
+  const modResponseFetch = await fetch(
+    "https://api.openai.com/v1/moderations",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        input: latestMsg.message,
+      }),
+    }
+  );
+  const modResponse = await modResponseFetch.json();
+  if (!modResponseFetch.ok) {
+    result = {
+      id: cuid(),
+      error: true,
+      errorResponse: `Error from moderation OpenAI: ${modResponse}`,
+    };
+    return res.status(500).json(result);
+  }
+
+  console.log(modResponse);
+  console.log(modResponse.results);
+  if (modResponse.results[0].flagged) {
+    result = {
+      id: cuid(),
+      error: true,
+      errorResponse: `Your message was flagged as inappropriate and violates OpenAI's content policy.`,
+    };
+    return res.status(500).json(result);
+  }
+
   let chatResponse;
   try {
     const promptText: string = [
