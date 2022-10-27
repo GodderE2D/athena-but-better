@@ -5,6 +5,7 @@ import cuid from "cuid";
 import dayjs from "dayjs";
 import calendar from "dayjs/plugin/calendar";
 import { FailResponse, SuccessResponse } from "./api/sendMessage";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 dayjs.extend(calendar);
 
@@ -12,6 +13,8 @@ type Message = {
   id: string;
   sentAt: number;
   author: "system" | "bot" | "user";
+  username?: string;
+  userId?: string;
   message: string;
   temperature?: number;
   failedToSend: boolean;
@@ -23,6 +26,7 @@ const Home: NextPage = () => {
   const [messages, setMessages] = useState<Messages>([]);
   const [msg, setMsg] = useState("");
   const divEndRef = useRef(null);
+  const { data: session } = useSession();
 
   useEffect(() => {
     setMessages([
@@ -109,6 +113,35 @@ const Home: NextPage = () => {
                 <small className="block opacity-60">
                   Measurements based off awesomeness.
                 </small>
+                {session ? (
+                  <>
+                    <button
+                      className="btn btn-accent normal-case mt-4"
+                      onClick={() => signOut()}
+                    >
+                      Sign out (will refresh page)
+                    </button>
+                    <p className="opacity-60 text-sm mt-1 md:mt-2">
+                      Logged in as {session.user?.name} ({session.user?.email})
+                      <br />
+                      Your username (not e-mail address) is sent with every
+                      request.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className="btn btn-accent normal-case mt-2 md:mt-3 lg:mt-6"
+                      onClick={() => signIn("github")}
+                    >
+                      Sign in (will refresh page)
+                    </button>
+                    <p className="opacity-60 text-sm mt-1 md:mt-2">
+                      Log in using GitHub to benefit from less and
+                      personal-based instead of IP-based rate limits.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -169,6 +202,8 @@ const Home: NextPage = () => {
                     id: initialId,
                     sentAt: Date.now(),
                     author: "user",
+                    username: session?.user?.name ?? undefined,
+                    userId: undefined, // TODO maybe?
                     message: msg,
                     temperature: 0.7,
                     failedToSend: false,

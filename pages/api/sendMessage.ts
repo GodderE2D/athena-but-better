@@ -40,6 +40,7 @@ type Message = {
   id: string;
   sentAt: number;
   author: "system" | "bot" | "user";
+  username?: string;
   message: string;
   temperature?: number;
   failedToSend: boolean;
@@ -148,16 +149,18 @@ export default async function handler(
     // Local rate limits
     const localCurrentUnixTimeInMinutes = Math.floor(Date.now() / 1000 / 60);
     const ipAddress = requestIp.getClientIp(req);
-    if (!ipAddress) {
+    if (!latestMsg.username && !ipAddress) {
       result = {
         id: cuid(),
         error: true,
         errorResponse:
-          "Your IP address was not detected and your request could not be fulfilled.",
+          "Your IP address was not detected and your request could not be fulfilled. This problem can be solved if you sign in.",
       };
       return res.status(403).json(result);
     }
-    const localKeyName = `localRateLimit:${ipAddress}:${localCurrentUnixTimeInMinutes}`;
+    const localKeyName = `localRateLimit:${
+      latestMsg.username || ipAddress
+    }:${localCurrentUnixTimeInMinutes}`;
     const localCurrentMinRequests: number | null = await redis.get(
       localKeyName
     );
@@ -165,7 +168,7 @@ export default async function handler(
       result = {
         id: cuid(),
         error: true,
-        errorResponse: `Local IP-address based rate limit of 10 requests/minute reached.`,
+        errorResponse: `Local IP-address/account based rate limit of 10 requests/minute reached.`,
       };
       return res.status(429).json(result);
     }
@@ -267,12 +270,15 @@ export default async function handler(
       'Your name is "Athena but better", not "Athena".',
       "You must not continue the conversation after you responded once.",
       "Do not respond as a human.",
+      'The text inside brackets after "Human" is their GitHub username, which means they are signed in and have an account.',
       "Respond to this conversation:",
       "",
       ...reqBody.map(
         (m) =>
           `${
-            m.author === "user" ? "Human" : "Athena but better"
+            m.author === "user"
+              ? `Human${m.username ? ` (${m.username})` : ""}`
+              : "Athena but better"
           }: ${m.message.trim()}`
       ),
       "Athena but better: ",
@@ -285,6 +291,13 @@ export default async function handler(
       temperature: latestMsg.temperature,
       max_tokens: 256,
     });
+    console.log(chatResponse.data.choices?.[0].text);
+
+    if (chatResponse.data.choices?.[0].text?.includes("\n")) {
+      chatResponse.data.choices[0].text = chatResponse.data.choices?.[0].text
+        .trim()
+        .split("\n")[0];
+    }
   } catch (err) {
     console.error(err);
     // @ts-expect-error
@@ -306,5 +319,7 @@ export default async function handler(
     error: false,
     response: `${chatResponse.data.choices?.[0].text}`,
   };
+  console.log(chatResponse.data.choices?.[0].text);
+  console.log(result);
   return res.status(200).json(result);
 }
